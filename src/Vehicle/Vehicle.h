@@ -47,6 +47,7 @@
 #include "FTPManager.h"
 #include "ImageProtocolManager.h"
 #include "HealthAndArmingCheckReport.h"
+#include "StandardModes.h"
 
 class Actuators;
 class EventHandler;
@@ -1056,6 +1057,7 @@ private:
     void _chunkedStatusTextCompleted    (uint8_t compId);
     void _setMessageInterval            (int messageId, int rate);
     EventHandler& _eventHandler         (uint8_t compid);
+    bool setFlightModeCustom            (const QString& flightMode, uint8_t* base_mode, uint32_t* custom_mode);
 
     static void _rebootCommandResultHandler(void* resultHandlerData, int compId, MAV_RESULT commandResult, uint8_t progress, MavCmdResultFailureCode_t failureCode);
 
@@ -1362,6 +1364,7 @@ private:
     ImageProtocolManager*           _imageProtocolManager       = nullptr;
     InitialConnectStateMachine*     _initialConnectStateMachine = nullptr;
     Actuators*                      _actuators                  = nullptr;
+    StandardModes*                  _standardModes              = nullptr;
 
     static const char* _rollFactName;
     static const char* _pitchFactName;
