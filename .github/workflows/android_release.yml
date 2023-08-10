@@ -1,4 +1,3 @@
-# The 32 and 64 bit version of these actions should be kept in sync
 name: Android 32/64-bit Release
 
 on:
@@ -25,18 +24,19 @@ jobs:
   build:
     runs-on:  ubuntu-20.04
 
-    strategy:	
-      matrix:	
-       include:	
-         - architecture: 32bits	
-           eabi: armeabi-v7a	
-           ARTIFACT: QGroundControl32.apk	
-         - architecture: 64bits	
-           eabi: arm64-v8a	
-           ARTIFACT: QGroundControl64.apk
+    strategy:
+      matrix:
+        include:
+          - architecture: 32bits
+            eabi: armeabi-v7a
+            ARTIFACT: QGroundControl32.apk
+          - architecture: 64bits
+            eabi: arm64-v8a
+            ARTIFACT: QGroundControl64.apk
 
     steps:
       - name: Restore Qt cache
+        id: restore-qt-cache
         uses: actions/cache@v2
         with:
           path: ${{ runner.temp }}/Qt
@@ -44,6 +44,7 @@ jobs:
           restore-keys: qt-cache-
 
       - name: Restore NDK cache
+        id: restore-ndk-cache
         uses: actions/cache@v2
         with:
           path: ${{ steps.setup-ndk.outputs.ndk-path }}
@@ -51,12 +52,12 @@ jobs:
           restore-keys: ndk-cache-
 
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
         with:
           submodules: recursive
 
       - name: Get all tags for correct version determination
-        working-directory:  ${{ github.workspace }}
+        working-directory: ${{ github.workspace }}
         run: |
           git fetch --all --tags -f
 
@@ -64,14 +65,15 @@ jobs:
         if: steps.restore-qt-cache.outputs.cache-hit != 'true'
         uses: jurplel/install-qt-action@v3
         with:
-          version:      ${{ env.QT_VERSION }}
-          host:         linux
-          target:       android
-          dir:          ${{ runner.temp }}
-          modules:      qtcharts
+          version: ${{ env.QT_VERSION }}
+          host: linux
+          target: android
+          dir: ${{ runner.temp }}
+          modules: qtcharts
           setup-python: true
 
       - name: Install Android NDK
+        if: steps.restore-ndk-cache.outputs.cache-hit != 'true'
         uses: nttld/setup-ndk@v1
         id: setup-ndk
         with:
@@ -80,45 +82,46 @@ jobs:
 
       - name: Remove Android SDK android-33-ext
         run: |
-            ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --uninstall "platforms;android-33-ext5"
-            ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --uninstall "platforms;android-33-ext4"
+          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --uninstall "platforms;android-33-ext5"
+          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --uninstall "platforms;android-33-ext4"
 
       - name: Install ccache
-        run:  sudo apt-get install ccache
+        run: sudo apt-get install ccache
 
       - name: Prepare ccache timestamp
         id: ccache_cache_timestamp
         run: echo "name=timestamp::$(date --utc +'%Y-%m-%d-%H\;%M\;%S')" >> $GITHUB_OUTPUT
 
       - name: ccache cache files
-        uses: actions/cache@v3
+        uses: actions/cache@v2
         with:
-          path:         ~/.ccache
-          key:          ${{ runner.os }}-ccache-${{steps.ccache_cache_timestamp.outputs.timestamp}}
+          path: ~/.ccache
+          key: ${{ runner.os }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
           restore-keys: ${{ runner.os }}-ccache-
 
       - name: Setup ccache
         run: |
-            mkdir -p ~/.ccache
-            echo "base_dir = ${GITHUB_WORKSPACE}" > ~/.ccache/ccache.conf
-            echo "compression = true" >> ~/.ccache/ccache.conf
-            echo "compression_level = 5" >> ~/.ccache/ccache.conf
-            ccache -s
-            ccache -z
+          mkdir -p ~/.ccache
+          echo "base_dir = ${GITHUB_WORKSPACE}" > ~/.ccache/ccache.conf
+          echo "compression = true" >> ~/.ccache/ccache.conf
+          echo "compression_level = 5" >> ~/.ccache/ccache.conf
+          ccache -s
+          ccache -z
+
       - name: Create build directory
-        run:  mkdir ${{ runner.temp }}/shadow_build_dir
+        run: mkdir ${{ runner.temp }}/shadow_build_dir
 
       - name: Install gstreamer
-        working-directory:  ${{ github.workspace }}
+        working-directory: ${{ github.workspace }}
         run: |
-            wget --quiet https://gstreamer.freedesktop.org/data/pkg/android/1.18.5/gstreamer-1.0-android-universal-1.18.5.tar.xz
-            mkdir gstreamer-1.0-android-universal-1.18.5
-            tar xf gstreamer-1.0-android-universal-1.18.5.tar.xz -C gstreamer-1.0-android-universal-1.18.5
+          wget --quiet https://gstreamer.freedesktop.org/data/pkg/android/1.18.5/gstreamer-1.0-android-universal-1.18.5.tar.xz
+          mkdir gstreamer-1.0-android-universal-1.18.5
+          tar xf gstreamer-1.0-android-universal-1.18.5.tar.xz -C gstreamer-1.0-android-universal-1.18.5
 
       - name: Update android manifest
         if: github.ref_name != 'Stable'
         run: |
-            ${SOURCE_DIR}/tools/update_android_manifest_package.sh ${{ github.ref_name }}
+          ${SOURCE_DIR}/tools/update_android_manifest_package.sh ${{ github.ref_name }}
 
       - name: Build
         working-directory: ${{ runner.temp }}/shadow_build_dir
@@ -128,12 +131,12 @@ jobs:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
           ANDROID_NDK_LATEST_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
           ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
-        run:  |
-            qmake -r ${SOURCE_DIR}/qgroundcontrol.pro -spec android-clang CONFIG+=${BUILD_TYPE} CONFIG+=installer ANDROID_ABIS="${{ matrix.eabi }}"
-            make -j2
+        run: |
+          qmake -r ${SOURCE_DIR}/qgroundcontrol.pro -spec android-clang CONFIG+=${BUILD_TYPE} CONFIG+=installer ANDROID_ABIS="${{ matrix.eabi }}"
+          make -j2
 
       - name: ccache post-run
-        run:  ccache -s
+        run: ccache -s
 
       - name: Save artifact
         if: steps.build.outcome == 'success' && !contains(github.event.head_commit.message, '[skip ci]')
