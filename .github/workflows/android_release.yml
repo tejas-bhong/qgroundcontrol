@@ -122,8 +122,8 @@ jobs:
         run:  ccache -s
 
       - name: Save artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@master
         with:
           name: ${{ matrix.ARTIFACT }}
-          path: saved_bins/
+          path: ${{ runner.temp }}/shadow_build_dir/package/${{ matrix.ARTIFACT }}
           
