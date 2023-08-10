@@ -1,4 +1,4 @@
-name: Android 32/64-bit Release
+name: Android 32/64-bit Release 
 
 on:
   push:
