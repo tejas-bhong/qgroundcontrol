@@ -125,4 +125,5 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.ARTIFACT }}
-          path: ${{ runner.temp }}/shadow_build_dir/package/${{ matrix.ARTIFACT }}
+          path: saved_bins/
+          
