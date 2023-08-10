@@ -122,58 +122,26 @@ jobs:
         run:  ccache -s
 
       - name: Save artifact
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.ARTIFACT }}
           path: ${{ runner.temp }}/shadow_build_dir/package/${{ matrix.ARTIFACT }}
 
-      #- name: Upload build to S3 Bucket
-      #  if:                 github.event_name == 'push'
-      #  working-directory:  ${{ runner.temp }}/shadow_build_dir/package
-      #  run: |
-      #        aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #        aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #        aws s3 cp ${{ matrix.ARTIFACT }} s3://qgroundcontrol/builds/${{ github.ref_name }}/${{ matrix.ARTIFACT }} --region us-west-2 --acl public-read
-
-      #- name: Upload tagged stable build to S3 latest Bucket
-      #  if:                 github.event_name == 'push' && github.ref_type == 'tag'
-      #  working-directory:  ${{ runner.temp }}/shadow_build_dir/package
-      #  run: |
-      #        aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #        aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #        aws s3 cp ${{ matrix.ARTIFACT }} s3://qgroundcontrol/latest/${{ matrix.ARTIFACT }} --region us-west-2 --acl public-read
-
-      #- name: Create Release
-      #  id: create_release
-      #  uses: actions/create-release@v1
-      #  with:
-      #    tag_name: v1.0.0 # Replace with the appropriate tag for your release
-      #    release_name: Release 1.0.0 # Replace with the release name
-      #    draft: false
-      #    prerelease: false
-
-      #- name: Upload Release Asset
-      #  id: upload-release-asset
-      #  uses: actions/upload-release-asset@v1
-      #  with:
-      #    upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #    asset_path: ${{ runner.temp }}/shadow_build_dir/package/${{ matrix.ARTIFACT }}
-      #    asset_name: ${{ matrix.ARTIFACT }}
-      #    asset_content_type: application/octet-stream
-      
-      - name: Publish to GitHub Pages
-        uses: actions/checkout@v2
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
         with:
-          ref: gh-pages # The branch containing your GitHub Pages content
-          path: gh-pages # The directory to check out the branch into
+          tag_name: v1.0.0 # Replace with the appropriate tag for your release
+          release_name: Release 1.0.0 # Replace with the release name
+          draft: false
+          prerelease: false
 
-      - name: Move artifact to Pages directory
-        run: mv ${{ runner.temp }}/shadow_build_dir/package/${{ matrix.ARTIFACT }} ./gh-pages/
-      
-      - name: Commit and Push Changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add ./gh-pages/${{ matrix.ARTIFACT }}
-          git commit -m "Add binary artifact"
-          git push
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ runner.temp }}/shadow_build_dir/package/${{ matrix.ARTIFACT }}
+          asset_name: ${{ matrix.ARTIFACT }}
+          asset_content_type: application/octet-stream
+          
