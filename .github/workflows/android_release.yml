@@ -25,17 +25,31 @@ jobs:
   build:
     runs-on:  ubuntu-20.04
 
-    strategy:
-      matrix:
-       include:
-         - architecture: 32bits
-           eabi: armeabi-v7a
-           ARTIFACT: QGroundControl32.apk
-         - architecture: 64bits
-           eabi: arm64-v8a
+    strategy:	
+      matrix:	
+       include:	
+         - architecture: 32bits	
+           eabi: armeabi-v7a	
+           ARTIFACT: QGroundControl32.apk	
+         - architecture: 64bits	
+           eabi: arm64-v8a	
            ARTIFACT: QGroundControl64.apk
 
     steps:
+      - name: Restore Qt cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ runner.temp }}/Qt
+          key: qt-cache-${{ hashFiles('**/*.pro') }}
+          restore-keys: qt-cache-
+
+      - name: Restore NDK cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.setup-ndk.outputs.ndk-path }}
+          key: ndk-cache-${{ hashFiles('**/*.pro') }}
+          restore-keys: ndk-cache-
+
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
@@ -47,6 +61,7 @@ jobs:
           git fetch --all --tags -f
 
       - name: Install Qt
+        if: steps.restore-qt-cache.outputs.cache-hit != 'true'
         uses: jurplel/install-qt-action@v3
         with:
           version:      ${{ env.QT_VERSION }}
@@ -90,11 +105,10 @@ jobs:
             echo "compression_level = 5" >> ~/.ccache/ccache.conf
             ccache -s
             ccache -z
-
       - name: Create build directory
         run:  mkdir ${{ runner.temp }}/shadow_build_dir
 
-      - name:               Install gstreamer
+      - name: Install gstreamer
         working-directory:  ${{ github.workspace }}
         run: |
             wget --quiet https://gstreamer.freedesktop.org/data/pkg/android/1.18.5/gstreamer-1.0-android-universal-1.18.5.tar.xz
@@ -122,8 +136,8 @@ jobs:
         run:  ccache -s
 
       - name: Save artifact
-        uses: actions/upload-artifact@master
+        if: steps.build.outcome == 'success' && !contains(github.event.head_commit.message, '[skip ci]')
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.ARTIFACT }}
           path: ${{ runner.temp }}/shadow_build_dir/package/${{ matrix.ARTIFACT }}
-          
