@@ -45,12 +45,8 @@ jobs:
 
       - name: Restore NDK cache
         id: restore-ndk-cache
-        uses: actions/cache@v2
-        with:
-          path: ${{ steps.setup-ndk.outputs.ndk-path }}
-          key: ndk-cache-${{ hashFiles('**/*.pro') }}
-          restore-keys: ndk-cache-
-
+        run: echo "::set-output name=path::${{ steps.setup-ndk.outputs.ndk-path }}"
+      
       - name: Checkout repo
         uses: actions/checkout@v2
         with:
