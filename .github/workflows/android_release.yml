@@ -9,20 +9,20 @@ on:
       - 'v*'
   pull_request:
     branches:
-    - '*'
+      - '*'
 
 defaults:
   run:
     shell: bash
 
 env:
-  SOURCE_DIR:   ${{ github.workspace }}
-  QT_VERSION:   5.15.2
-  BUILD_TYPE:   ${{ fromJSON('["DailyBuild", "StableBuild"]')[ github.ref_type == 'tag' || contains(github.ref, 'Stable_' ) ] }}
+  SOURCE_DIR: ${{ github.workspace }}
+  QT_VERSION: 5.15.2
+  BUILD_TYPE: ${{ fromJSON('["DailyBuild", "StableBuild"]')[ github.ref_type == 'tag' || contains(github.ref, 'Stable_' ) ] }}
 
 jobs:
   build:
-    runs-on:  ubuntu-20.04
+    runs-on: ubuntu-20.04
 
     strategy:
       matrix:
@@ -90,13 +90,13 @@ jobs:
 
       - name: Prepare ccache timestamp
         id: ccache_cache_timestamp
-        run: echo "name=timestamp::$(date --utc +'%Y-%m-%d-%H\;%M\;%S')" >> $GITHUB_OUTPUT
+        run: echo "name=timestamp::$(date --utc +'%Y-%m-%d-%H;%M;%S')" >> $GITHUB_ENV
 
       - name: ccache cache files
         uses: actions/cache@v2
         with:
           path: ~/.ccache
-          key: ${{ runner.os }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
+          key: ${{ runner.os }}-ccache-${{ env.ccache_cache_timestamp }}
           restore-keys: ${{ runner.os }}-ccache-
 
       - name: Setup ccache
