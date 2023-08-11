@@ -45,7 +45,7 @@ jobs:
 
       - name: Restore NDK cache
         id: restore-ndk-cache
-        run: echo "::set-output name=path::${{ steps.setup-ndk.outputs.ndk-path }}"
+        run: echo "path=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_OUTPUT
       
       - name: Checkout repo
         uses: actions/checkout@v2
