@@ -115,18 +115,18 @@ Item {
         guidedValueSlider:          _guidedValueSlider
     }
 
-    FlyViewInstrumentPanel {
-        id:                         instrumentPanel
-        anchors.margins:            _toolsMargin
-        anchors.top:                multiVehiclePanelSelector.visible ? multiVehiclePanelSelector.bottom : parent.top
-        anchors.right:              parent.right
-        width:                      _rightPanelWidth
-        spacing:                    _toolsMargin
-        visible:                    QGroundControl.corePlugin.options.flyView.showInstrumentPanel && multiVehiclePanelSelector.showSingleVehiclePanel
-        availableHeight:            parent.height - y - _toolsMargin
+//    FlyViewInstrumentPanel {
+//        id:                         instrumentPanel
+//        anchors.margins:            _toolsMargin
+//        anchors.top:                multiVehiclePanelSelector.visible ? multiVehiclePanelSelector.bottom : parent.top
+//        anchors.right:              parent.right
+//        width:                      _rightPanelWidth
+//        spacing:                    _toolsMargin
+//        visible:                    QGroundControl.corePlugin.options.flyView.showInstrumentPanel && multiVehiclePanelSelector.showSingleVehiclePanel
+//        availableHeight:            parent.height - y - _toolsMargin
 
-        property real rightInset: visible ? parent.width - x : 0
-    }
+//        property real rightInset: visible ? parent.width - x : 0
+//    }
 
     PhotoVideoControl {
         id:                     photoVideoControl
